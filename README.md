@@ -78,6 +78,7 @@ $$\text{Total Cost} = (FN \times \$122.21) + (FP \times \$10.00)$$
 ## 📁 Repository Structure
 
 ```
+├── app.py                               # Interactive Streamlit Web Platform & XAI Dashboard
 ├── credit_card_fraud_pipeline.ipynb    # Comprehensive course notebook (executed with all outputs)
 ├── run_pipeline.py                      # Standalone production runner & benchmark
 ├── pyproject.toml                       # Build & project metadata specification
@@ -86,13 +87,19 @@ $$\text{Total Cost} = (FN \times \$122.21) + (FP \times \$10.00)$$
 │   ├── __init__.py                      # Package exports
 │   ├── feature_engineering.py           # FraudFeatureEngineer transformer (scikit-learn compatible)
 │   ├── evaluation.py                   # PR-AUC, ROC, vectorized cost/F1 threshold tuning
+│   ├── explainer.py                    # FraudExplainer engine (TreeSHAP & automated reasons)
 │   └── pipeline.py                      # FraudDetectionPipeline class (save/load/tune/infer)
 ├── tests/                               # Automated unit test suite (pytest)
 │   ├── test_feature_engineering.py
 │   ├── test_evaluation.py
+│   ├── test_explainer.py
 │   └── test_pipeline.py
 ├── models/
-│   └── best_fraud_pipeline.joblib       # Serialized winning pipeline artifact
+│   ├── best_fraud_pipeline.joblib       # Serialized winning pipeline artifact
+│   ├── rf_pipeline.joblib               # Random Forest pipeline
+│   ├── mlp_pipeline.joblib              # Multi-Layer Perceptron neural network
+│   ├── hgb_pipeline.joblib              # HistGradientBoosting pipeline
+│   └── logreg_pipeline.joblib           # Cost-Sensitive Logistic Regression
 ├── reports/
 │   ├── benchmark_summary.csv            # Summary metrics table
 │   ├── precision_recall_and_roc_curves.png
@@ -116,19 +123,31 @@ pip install -r requirements.txt
 ### 2. Dataset Setup
 Download `creditcard.csv` from [Kaggle](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud) and place it in the project root directory.
 
-### 3. Run Automated Unit Tests
-Verify pipeline components, schema compatibility, and math operations:
+### 3. Launch the Interactive Web Platform (Streamlit)
+To launch the real-time fraud scoring dashboard with SHAP explainability and algorithm switching:
+```bash
+streamlit run app.py
+```
+**Dashboard Features:**
+* **🔍 Live Transaction Inspector:** Real-time scoring, risk probability gauge, interactive decision threshold slider, and plain-English reasons for fraud alerts.
+* **💡 SHAP Explainability Engine:** Waterfall and bar charts breaking down the exact mathematical contribution of each PCA feature and interaction term.
+* **🤖 Multi-Algorithm Selection:** Switch between Random Forest, Neural Network (MLP), HistGradientBoosting, and Logistic Regression on the fly.
+* **📁 Batch Processing:** Drag-and-drop CSV upload, batch scoring, flag rate metrics, and downloadable audited CSV.
+* **💼 Financial ROI Simulator:** Live sliders for Cost of False Negative ($FN) and Cost of False Positive ($FP) modeling business cost impact.
+
+### 4. Run Automated Unit Tests
+Verify pipeline components, schema compatibility, math operations, and explainer:
 ```bash
 pytest -v
 ```
 
-### 4. Run the Production Pipeline
-To train, benchmark all candidate models, export high-res charts, and save the best pipeline:
+### 5. Run the Production Pipeline & Benchmark
+To train, benchmark all candidate models, export high-res charts, and save candidate pipelines:
 ```bash
 python run_pipeline.py
 ```
 
-### 4. Direct Inference with the Saved Model
+### 6. Direct Inference with Python SDK
 ```python
 import pandas as pd
 from src.pipeline import FraudDetectionPipeline
