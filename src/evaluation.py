@@ -14,12 +14,14 @@ from sklearn.metrics import (
     precision_score
 )
 
-def find_optimal_threshold(y_true, y_probs, metric='f1', cost_fn=122.0, cost_fp=10.0):
+def find_optimal_threshold(y_true, y_probs, metric='f1', cost_fn=122.21, cost_fp=10.0):
     """
     Finds the optimal classification decision threshold based on either:
     1. Maximum F1-score ('f1')
     2. Minimum Business Cost ('cost'): Cost = (FN * cost_fn) + (FP * cost_fp)
     """
+    y_true = np.asarray(y_true)
+    y_probs = np.asarray(y_probs)
     precisions, recalls, thresholds = precision_recall_curve(y_true, y_probs)
     
     if metric == 'f1':
@@ -30,16 +32,21 @@ def find_optimal_threshold(y_true, y_probs, metric='f1', cost_fn=122.0, cost_fp=
         return float(best_thresh), float(best_metric), "f1"
     
     elif metric == 'cost':
-        costs = []
-        for thresh in thresholds:
-            y_pred = (y_probs >= thresh).astype(int)
-            fn = np.sum((y_true == 1) & (y_pred == 0))
-            fp = np.sum((y_true == 0) & (y_pred == 1))
-            total_cost = (fn * cost_fn) + (fp * cost_fp)
-            costs.append(total_cost)
+        total_pos = np.sum(y_true == 1)
+        # Vectorized cost computation from precision-recall curve
+        # Note: len(thresholds) == len(precisions) - 1
+        tp = recalls[:-1] * total_pos
+        fn = total_pos - tp
+        with np.errstate(divide='ignore', invalid='ignore'):
+            fp = np.where(precisions[:-1] > 0, (tp / precisions[:-1]) - tp, 0.0)
+            fp = np.nan_to_num(fp, nan=0.0)
+        costs = (fn * cost_fn) + (fp * cost_fp)
+        
+        if len(costs) == 0:
+            return 0.5, float(total_pos * cost_fn), "cost"
             
         best_idx = np.argmin(costs)
-        best_thresh = thresholds[best_idx] if best_idx < len(thresholds) else 0.5
+        best_thresh = thresholds[best_idx]
         best_cost = costs[best_idx]
         return float(best_thresh), float(best_cost), "cost"
     else:

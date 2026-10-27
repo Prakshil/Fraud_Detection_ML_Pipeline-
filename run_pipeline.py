@@ -7,9 +7,10 @@ from sklearn.model_selection import train_test_split
 from src.pipeline import FraudDetectionPipeline
 from src.evaluation import evaluate_model, find_optimal_threshold, plot_curves, plot_confusion_matrix_grid
 
-CSV_PATH = r"c:\Users\Prakshil\OneDrive\Downloads\BDA proj\creditcard.csv"
-REPORTS_DIR = r"c:\Users\Prakshil\OneDrive\Downloads\BDA proj\reports"
-MODELS_DIR = r"c:\Users\Prakshil\OneDrive\Downloads\BDA proj\models"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CSV_PATH = os.path.join(BASE_DIR, "creditcard.csv")
+REPORTS_DIR = os.path.join(BASE_DIR, "reports")
+MODELS_DIR = os.path.join(BASE_DIR, "models")
 
 def main():
     os.makedirs(REPORTS_DIR, exist_ok=True)

@@ -20,14 +20,16 @@ class FraudDetectionPipeline:
     - Optimal decision threshold tracking
     - Model persistence & inference routines
     """
-    def __init__(self, model_type="mlp", threshold=0.5, **kwargs):
+    def __init__(self, model_type="mlp", threshold=0.5, tuning_metric="f1", **kwargs):
         self.model_type = model_type.lower()
         self.threshold = threshold
+        self.tuning_metric = tuning_metric.lower()
         self.pipeline = self._create_pipeline(**kwargs)
         self.is_fitted = False
         self.metadata = {
             "model_type": self.model_type,
             "threshold": self.threshold,
+            "tuning_metric": self.tuning_metric,
             "features_in": None,
             "f1_score": None,
             "pr_auc": None
@@ -69,7 +71,7 @@ class FraudDetectionPipeline:
             ("classifier", estimator)
         ])
 
-    def fit(self, X, y, tune_thresh=True, X_val=None, y_val=None):
+    def fit(self, X, y, tune_thresh=True, X_val=None, y_val=None, tuning_metric=None):
         """
         Fits the entire pipeline on training data and optionally tunes decision threshold.
         """
@@ -79,14 +81,16 @@ class FraudDetectionPipeline:
         self.is_fitted = True
 
         if tune_thresh:
+            metric = (tuning_metric or self.tuning_metric).lower()
+            self.metadata["tuning_metric"] = metric
             # Tune threshold on validation set if provided, else use training set
             X_eval = X_val if X_val is not None else X
             y_eval = y_val if y_val is not None else y
             y_probs = self.predict_proba(X_eval)
-            opt_thresh, opt_metric, _ = find_optimal_threshold(y_eval, y_probs, metric="f1")
+            opt_thresh, opt_metric, _ = find_optimal_threshold(y_eval, y_probs, metric=metric)
             self.threshold = opt_thresh
             self.metadata["threshold"] = opt_thresh
-            print(f"Optimal F1 threshold tuned: {opt_thresh:.4f} (Validation F1: {opt_metric:.4f})")
+            print(f"Optimal {metric.upper()} threshold tuned: {opt_thresh:.4f} (Validation {metric.upper()}: {opt_metric:.4f})")
 
         return self
 
@@ -137,7 +141,8 @@ class FraudDetectionPipeline:
         Loads a serialized pipeline artifact ready for inference.
         """
         payload = joblib.load(filepath)
-        instance = cls(model_type=payload["model_type"], threshold=payload["threshold"])
+        tuning_metric = payload.get("metadata", {}).get("tuning_metric", "f1")
+        instance = cls(model_type=payload["model_type"], threshold=payload["threshold"], tuning_metric=tuning_metric)
         instance.pipeline = payload["pipeline"]
         instance.metadata = payload["metadata"]
         instance.is_fitted = True
