@@ -41,17 +41,17 @@ Our production pipeline resolves this through a **Hybrid Architecture**:
 
 All models were evaluated on the **pristine, untouched 20% holdout test partition**:
 
-| Algorithm | Train Time | PR-AUC | ROC-AUC | Tuned Threshold | Tuned F1-Score | Frauds Caught (Recall) | False Alarms (FP) | Default (0.5) False Alarms |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Random Forest (Balanced Subsample)** 🏆 | **15.85s** | **0.8402** | **0.9773** | **0.4754** | **0.8229** | **79 / 98 (80.6%)** | **15** | **15** |
-| **Neural Network (MLP Classifier)** | 30.26s | **0.7991** | **0.9758** | 0.1163 | 0.7568 | **84 / 98 (85.7%)** | 40 | 17 |
-| **HistGradientBoosting (Balanced)** | **2.37s** | 0.7365 | 0.9661 | 0.9185 | 0.7477 | 80 / 98 (81.6%) | 36 | 150 |
-| **Logistic Regression (Cost-Sensitive)** | **4.19s** | 0.7071 | 0.9747 | 0.9999 | 0.7547 | 80 / 98 (81.6%) | 34 | 1,522 |
+| Algorithm | Train Time | PR-AUC | ROC-AUC | Tuned Threshold | Tuned F1-Score | Frauds Caught (Recall) | False Alarms (FP) | Total Financial Cost | Default (0.5) False Alarms |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Random Forest (Balanced Subsample)** 🏆 | **12.62s** | **0.8344** | 0.9648 | **0.5847** | **0.8065** | **75 / 98 (76.5%)** | **13** | **$2,940.83** | **15** |
+| **Neural Network (MLP Classifier)** | 17.38s | **0.8307** | **0.9810** | 0.5919 | **0.8079** | **82 / 98 (83.7%)** | 23 | **$2,185.36** | 28 |
+| **HistGradientBoosting (Balanced)** | **1.58s** | 0.7364 | 0.9572 | 0.9315 | 0.7407 | 80 / 98 (81.6%) | 38 | $2,579.78 | 139 |
+| **Logistic Regression (Cost-Sensitive)** | **2.23s** | 0.7266 | 0.9783 | 0.9999 | 0.7547 | 80 / 98 (81.6%) | 34 | $2,539.78 | 1,459 |
 
 ### Key Findings:
-* **Top Performer:** **Random Forest** achieved the highest PR-AUC (**0.8402**) and F1-score (**0.8229**), stopping **80.6% of frauds with only 15 false alarms** across 56,864 genuine transactions (Precision = **84.0%**).
-* **Highest Catch Rate:** The **MLP Neural Network** caught **85.7% of all frauds** (84/98).
-* **Threshold Tuning Impact:** On Cost-Sensitive Logistic Regression, default thresholding produced **1,522 false alarms** (F1 = 0.1030). Tuning the threshold reduced false alarms to **34** and boosted F1 to **0.7547**.
+* **Top Performer:** **Random Forest** achieved the highest PR-AUC (**0.8344**), stopping **76.5% of frauds with only 13 false alarms** across 56,864 genuine transactions (Precision = **85.2%**, F1 = **0.8065**).
+* **Highest Catch Rate:** The **MLP Neural Network** caught **83.7% of all frauds** (82/98) with only 23 false alarms, achieving the lowest net business cost (**$2,185.36**).
+* **Threshold Tuning Impact:** On Cost-Sensitive Logistic Regression, default thresholding produced **1,459 false alarms** (F1 = 0.1070). Tuning the threshold reduced false alarms to **34** and boosted F1 to **0.7547**.
 
 Visual performance artifacts can be found in [`reports/`](reports/):
 * Precision-Recall & ROC Curves: `reports/precision_recall_and_roc_curves.png`
@@ -69,23 +69,30 @@ In financial operations, false negatives and false positives have asymmetric cos
 $$\text{Total Cost} = (FN \times \$122.21) + (FP \times \$10.00)$$
 
 * **Unmitigated Fraud Loss (No Model):** $98 \times \$122.21 = \mathbf{\$11,976.58}$
-* **Random Forest Pipeline Cost:** $(19 \times \$122.21) + (15 \times \$10.00) = \mathbf{\$2,471.99}$
-* **Net Financial Savings:** **$9,504.59 (79.4% fraud loss reduction)** on a single test partition.
+* **Random Forest Pipeline Cost:** $(23 \times \$122.21) + (13 \times \$10.00) = \mathbf{\$2,940.83}$
+* **Net Financial Savings:** **$9,035.75 (75.4% fraud loss reduction)** on a single test partition.
+* **MLP Neural Network Cost:** $(16 \times \$122.21) + (23 \times \$10.00) = \mathbf{\$2,185.36}$ (**$9,791.22 / 81.8% savings**).
 
 ---
 
 ## 📁 Repository Structure
 
 ```
-├── credit_card_fraud_pipeline.ipynb    # Comprehensive course notebook (EDA, plots, story)
+├── credit_card_fraud_pipeline.ipynb    # Comprehensive course notebook (executed with all outputs)
 ├── run_pipeline.py                      # Standalone production runner & benchmark
+├── pyproject.toml                       # Build & project metadata specification
+├── requirements.txt                     # Pinned runtime and development dependencies
 ├── src/
 │   ├── __init__.py                      # Package exports
-│   ├── feature_engineering.py           # FraudFeatureEngineer transformer (scikit-learn)
-│   ├── evaluation.py                   # PR-AUC, ROC, threshold tuning, and plotting routines
-│   └── pipeline.py                      # FraudDetectionPipeline class (save/load/tune)
+│   ├── feature_engineering.py           # FraudFeatureEngineer transformer (scikit-learn compatible)
+│   ├── evaluation.py                   # PR-AUC, ROC, vectorized cost/F1 threshold tuning
+│   └── pipeline.py                      # FraudDetectionPipeline class (save/load/tune/infer)
+├── tests/                               # Automated unit test suite (pytest)
+│   ├── test_feature_engineering.py
+│   ├── test_evaluation.py
+│   └── test_pipeline.py
 ├── models/
-│   └── best_fraud_pipeline.joblib       # Serialized winning pipeline artifact (1.98 MB)
+│   └── best_fraud_pipeline.joblib       # Serialized winning pipeline artifact
 ├── reports/
 │   ├── benchmark_summary.csv            # Summary metrics table
 │   ├── precision_recall_and_roc_curves.png
@@ -103,13 +110,19 @@ Clone the repository and install dependencies:
 ```bash
 git clone https://github.com/Prakshil/Fraud_Detection_ML_Pipeline-.git
 cd Fraud_Detection_ML_Pipeline-
-pip install numpy pandas scipy scikit-learn imbalanced-learn matplotlib seaborn joblib
+pip install -r requirements.txt
 ```
 
 ### 2. Dataset Setup
 Download `creditcard.csv` from [Kaggle](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud) and place it in the project root directory.
 
-### 3. Run the Production Pipeline
+### 3. Run Automated Unit Tests
+Verify pipeline components, schema compatibility, and math operations:
+```bash
+pytest -v
+```
+
+### 4. Run the Production Pipeline
 To train, benchmark all candidate models, export high-res charts, and save the best pipeline:
 ```bash
 python run_pipeline.py
