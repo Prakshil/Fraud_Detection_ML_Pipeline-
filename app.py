@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import datetime
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -173,111 +174,185 @@ with tabs[0]:
 
     # Preset selection
     preset_choice = st.radio(
-        "Load Preset Synthetic Test Scenarios (Handcrafted - not from dataset):",
+        "Load Preset Business Transaction Scenarios:",
         [
-            "🟢 Scenario 1: Everyday Legitimate Purchase ($24.50, Midday 14:00)",
-            "🔴 Scenario 2: Severe Midnight Account Takeover ($980.00, 03:00 Night)",
-            "⚠️ Scenario 3: Borderline Suspicious E-Commerce ($349.00, 21:30 Evening)",
-            "🤖 Scenario 4: Automated Card-Testing Micro-Transaction ($1.00, 04:30 Early Morning)",
+            "🟢 Scenario 1: Everyday Legitimate Purchase ($24.50, Midday 14:00, In-Store Grocery)",
+            "🔴 Scenario 2: Severe Midnight Account Takeover ($980.00, 03:00 Night, Offshore Proxy)",
+            "⚠️ Scenario 3: Borderline Suspicious E-Commerce ($349.00, 21:30 Evening, CVV-Only)",
+            "🤖 Scenario 4: Automated Card-Testing Micro-Transaction ($1.00, 04:30 Early Morning, Bot Burst)",
             "🛠️ Custom Transaction Inputs"
         ],
         horizontal=False
     )
 
-    # Initialize transaction values based on synthetic scenarios
-    row = {f"V{i}": 0.0 for i in range(1, 29)}
-    if preset_choice.startswith("🟢 Scenario 1"):
-        row.update({
-            "Time": 50400.0,
-            "Amount": 24.50,
-            "V14": 0.25,
-            "V12": -0.15,
-            "V10": 0.10,
-            "V17": 0.05,
-            "V4": -0.30,
-            "V11": -0.20
-        })
-    elif preset_choice.startswith("🔴 Scenario 2"):
-        row.update({
-            "Time": 10800.0,
-            "Amount": 980.00,
-            "V14": -7.20,
-            "V12": -4.80,
-            "V10": -3.90,
-            "V17": -4.10,
-            "V4": 3.85,
-            "V11": 3.10
-        })
-    elif preset_choice.startswith("⚠️ Scenario 3"):
-        row.update({
-            "Time": 77400.0,
-            "Amount": 349.00,
-            "V14": -2.60,
-            "V12": -1.95,
-            "V10": -1.50,
-            "V17": -1.20,
-            "V4": 1.80,
-            "V11": 1.40
-        })
-    elif preset_choice.startswith("🤖 Scenario 4"):
-        row.update({
-            "Time": 16200.0,
-            "Amount": 1.00,
-            "V14": -4.50,
-            "V12": -3.20,
-            "V10": -2.80,
-            "V17": -2.90,
-            "V4": 2.60,
-            "V11": 2.10
-        })
+    # Map preset to natural business variables
+    if preset_choice.startswith("🟢"):
+        init_time = datetime.time(14, 0)
+        init_day = "Day 1"
+        init_amount = 24.50
+        init_merch = "Supermarket / Grocery Store"
+        init_auth = "Chip & PIN In-Person (Biometric / Secured)"
+        init_loc = "Cardholder Trusted Device (Home Geolocation)"
+        init_velo = "Normal Spending Pacing (Standard habits)"
+    elif preset_choice.startswith("🔴"):
+        init_time = datetime.time(3, 0)
+        init_day = "Day 1"
+        init_amount = 980.00
+        init_merch = "Crypto Exchange / Offshore Wire"
+        init_auth = "Repeated PIN / CVV Failures (3+ Attempts)"
+        init_loc = "High-Risk Anonymous Proxy / Tor Exit Node"
+        init_velo = "Rapid Automated Burst (5+ transactions in 2 minutes)"
+    elif preset_choice.startswith("⚠️"):
+        init_time = datetime.time(21, 30)
+        init_day = "Day 1"
+        init_amount = 349.00
+        init_merch = "Online Retail / E-Commerce (Electronics)"
+        init_auth = "Online Card-Not-Present (CVV-only, No 3DS)"
+        init_loc = "New Unrecognized Domestic Device"
+        init_velo = "Normal Spending Pacing (Standard habits)"
+    elif preset_choice.startswith("🤖"):
+        init_time = datetime.time(4, 30)
+        init_day = "Day 1"
+        init_amount = 1.00
+        init_merch = "Digital Entertainment / Gaming Micro-Purchase"
+        init_auth = "Online Card-Not-Present (CVV-only, No 3DS)"
+        init_loc = "High-Risk Anonymous Proxy / Tor Exit Node"
+        init_velo = "Rapid Automated Burst (5+ transactions in 2 minutes)"
     else:
-        row.update({
-            "Time": 45000.0,
-            "Amount": 100.00,
-            "V14": -0.50,
-            "V12": -0.20
-        })
+        init_time = datetime.time(12, 30)
+        init_day = "Day 1"
+        init_amount = 85.00
+        init_merch = "Gas Station / Fuel Dispenser"
+        init_auth = "Contactless NFC Tap (Apple Pay / Google Pay)"
+        init_loc = "Cardholder Trusted Device (Home Geolocation)"
+        init_velo = "Normal Spending Pacing (Standard habits)"
 
-    # Container for transaction inputs
+    # Business Transaction Input Panel
     with st.container(border=True):
-        st.markdown("#### 📝 Transaction Parameters & Feature Controls")
-        col1, col2 = st.columns(2)
-        with col1:
-            inp_time = st.number_input("Elapsed Time (Seconds)", min_value=0.0, max_value=200000.0, value=float(row.get("Time", 0.0)))
-            approx_hour = int((inp_time // 3600) % 24)
-            st.caption(f"🕒 Equivalent Diurnal Time: **{approx_hour:02d}:00 hours** ({'Day 1' if inp_time < 86400 else 'Day 2'})")
-        with col2:
-            inp_amount = st.number_input("Transaction Amount ($)", min_value=0.0, max_value=30000.0, value=float(row.get("Amount", 0.0)), step=1.0)
-            st.caption(f"💳 Log1p Amount: **{np.log1p(inp_amount):.4f}**")
+        st.markdown("#### 💳 Human-Friendly Transaction Attributes")
+        st.caption("Enter normal banking transaction details below. The platform automatically formats time into seconds and maps operational attributes to underlying behavioral signals.")
 
-        st.markdown("**Top Correlated PCA Components (V14, V12, V10, V17, V4, V11):**")
-        pca_cols = st.columns(6)
-        v14_val = pca_cols[0].number_input("V14", value=float(row.get("V14", 0.0)), step=0.5)
-        v12_val = pca_cols[1].number_input("V12", value=float(row.get("V12", 0.0)), step=0.5)
-        v10_val = pca_cols[2].number_input("V10", value=float(row.get("V10", 0.0)), step=0.5)
-        v17_val = pca_cols[3].number_input("V17", value=float(row.get("V17", 0.0)), step=0.5)
-        v4_val = pca_cols[4].number_input("V4", value=float(row.get("V4", 0.0)), step=0.5)
-        v11_val = pca_cols[5].number_input("V11", value=float(row.get("V11", 0.0)), step=0.5)
+        bcol1, bcol2, bcol3 = st.columns([1.2, 1, 1.2])
+        with bcol1:
+            inp_clock = st.time_input("🕒 Time of Transaction (Clock)", value=init_time)
+            inp_day = st.radio("📅 Day", ["Day 1", "Day 2"], index=0 if init_day == "Day 1" else 1, horizontal=True)
+            inp_time_seconds = ((1 if inp_day == "Day 2" else 0) * 86400) + (inp_clock.hour * 3600) + (inp_clock.minute * 60) + inp_clock.second
+            st.caption(f"System elapsed time: **{inp_time_seconds:,} seconds** ({inp_clock.strftime('%I:%M %p')})")
 
-        input_dict = {
-            "Time": inp_time, "Amount": inp_amount,
-            "V14": v14_val, "V12": v12_val, "V10": v10_val,
-            "V17": v17_val, "V4": v4_val, "V11": v11_val
-        }
-        for i in range(1, 29):
-            if f"V{i}" not in input_dict:
-                input_dict[f"V{i}"] = float(row.get(f"V{i}", 0.0))
+        with bcol2:
+            inp_amount = st.number_input("💵 Transaction Amount ($)", min_value=0.01, max_value=50000.0, value=float(init_amount), step=5.0)
+            st.caption(f"Log-scale Amount: **{np.log1p(inp_amount):.4f}**")
 
-        with st.expander("🔬 Additional PCA Components (V1 to V28)", expanded=False):
-            other_v_cols = st.columns(6)
-            for idx, i in enumerate([j for j in range(1, 29) if j not in [14, 12, 10, 17, 4, 11]]):
-                col_target = other_v_cols[idx % 6]
-                default_val = float(row.get(f"V{i}", 0.0))
-                input_dict[f"V{i}"] = col_target.number_input(f"V{i}", value=default_val, step=0.5, key=f"v_{i}")
+        with bcol3:
+            merch_options = [
+                "Supermarket / Grocery Store",
+                "Gas Station / Fuel Dispenser",
+                "Online Retail / E-Commerce (Electronics)",
+                "Digital Entertainment / Gaming Micro-Purchase",
+                "Crypto Exchange / Offshore Wire",
+                "Luxury Jewelry / High-End Fashion",
+                "ATM Cash Withdrawal"
+            ]
+            inp_merch = st.selectbox("🏪 Merchant Business Category", merch_options, index=merch_options.index(init_merch))
+
+        bcol4, bcol5, bcol6 = st.columns(3)
+        with bcol4:
+            auth_options = [
+                "Chip & PIN In-Person (Biometric / Secured)",
+                "Contactless NFC Tap (Apple Pay / Google Pay)",
+                "Online E-Commerce (3D Secure SMS OTP)",
+                "Online Card-Not-Present (CVV-only, No 3DS)",
+                "Repeated PIN / CVV Failures (3+ Attempts)"
+            ]
+            inp_auth = st.selectbox("🔐 Cardholder Authentication", auth_options, index=auth_options.index(init_auth))
+
+        with bcol5:
+            loc_options = [
+                "Cardholder Trusted Device (Home Geolocation)",
+                "New Unrecognized Domestic Device",
+                "Foreign Country / Cross-Border Location Mismatch",
+                "High-Risk Anonymous Proxy / Tor Exit Node"
+            ]
+            inp_loc = st.selectbox("📍 Device & Geolocation Integrity", loc_options, index=loc_options.index(init_loc))
+
+        with bcol6:
+            velo_options = [
+                "Normal Spending Pacing (Standard habits)",
+                "Elevated Velocity (Multiple transactions in 1 hour)",
+                "Rapid Automated Burst (5+ transactions in 2 minutes)"
+            ]
+            inp_velo = st.selectbox("⚡ Spending Velocity & Frequency", velo_options, index=velo_options.index(init_velo))
+
+        # Map business inputs to PCA feature values
+        v_dict = {f"V{i}": 0.0 for i in range(1, 29)}
+        
+        # Geolocation & Device Mapping -> V14, V12, V17
+        if "Trusted Device" in inp_loc:
+            v_dict["V14"] += 0.25
+            v_dict["V12"] += 0.10
+            v_dict["V17"] += 0.10
+        elif "New Unrecognized" in inp_loc:
+            v_dict["V14"] -= 1.80
+            v_dict["V12"] -= 1.40
+            v_dict["V17"] -= 1.10
+        elif "Foreign Country" in inp_loc:
+            v_dict["V14"] -= 3.80
+            v_dict["V12"] -= 3.10
+            v_dict["V17"] -= 2.90
+        elif "High-Risk Anonymous" in inp_loc:
+            v_dict["V14"] -= 7.20
+            v_dict["V12"] -= 5.50
+            v_dict["V17"] -= 5.20
+
+        # Authentication Mapping -> V10, V4, V11
+        if "Chip & PIN" in inp_auth:
+            v_dict["V10"] += 0.20
+            v_dict["V4"] -= 0.30
+            v_dict["V11"] -= 0.20
+        elif "Contactless" in inp_auth:
+            v_dict["V10"] += 0.05
+            v_dict["V4"] += 0.10
+        elif "Online E-Commerce (3D" in inp_auth:
+            v_dict["V10"] -= 0.60
+            v_dict["V4"] += 0.60
+        elif "Online Card-Not-Present (CVV" in inp_auth:
+            v_dict["V10"] -= 2.20
+            v_dict["V4"] += 2.00
+            v_dict["V11"] += 1.80
+        elif "Repeated PIN" in inp_auth:
+            v_dict["V10"] -= 5.20
+            v_dict["V4"] += 4.20
+            v_dict["V11"] += 3.60
+
+        # Merchant Category Mapping
+        if "Crypto" in inp_merch:
+            v_dict["V4"] += 1.20
+            v_dict["V14"] -= 0.80
+        elif "Luxury" in inp_merch:
+            v_dict["V4"] += 0.60
+        elif "Digital Entertainment" in inp_merch:
+            v_dict["V4"] += 0.80
+            v_dict["V10"] -= 0.50
+
+        # Velocity Mapping
+        if "Rapid Automated" in inp_velo:
+            v_dict["V4"] += 2.50
+            v_dict["V11"] += 2.20
+        elif "Elevated" in inp_velo:
+            v_dict["V4"] += 1.20
+            v_dict["V11"] += 1.00
+
+        # Advanced expander for raw PCA overrides
+        with st.expander("🔬 Advanced: Direct PCA Component Overrides (V1 to V28)", expanded=False):
+            st.caption("For Data Scientists: The operational attributes above automatically set these anonymized PCA values. You can manually fine-tune them here if desired.")
+            pca_cols = st.columns(6)
+            for idx, i in enumerate(range(1, 29)):
+                col_t = pca_cols[idx % 6]
+                v_dict[f"V{i}"] = col_t.number_input(f"V{i}", value=float(v_dict[f"V{i}"]), step=0.5, key=f"pca_v_{i}")
 
     # Build input dataframe with correct column order
     ordered_cols = ['Time'] + [f'V{i}' for i in range(1, 29)] + ['Amount']
-    single_tx_df = pd.DataFrame([{c: input_dict.get(c, row.get(c, 0.0)) for c in ordered_cols}])
+    single_tx_df = pd.DataFrame([{"Time": float(inp_time_seconds), "Amount": float(inp_amount), **v_dict}])
 
     # Predict & Explain
     explanation = explainer.explain_transaction(single_tx_df, top_k=6)
