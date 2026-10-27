@@ -46,6 +46,10 @@ class FraudFeatureEngineer(BaseEstimator, TransformerMixin):
         fit_cols = [c for c in self.scale_cols if c in X_df.columns]
         if fit_cols:
             self.scaler.fit(X_df[fit_cols])
+            
+        # Determine output feature names reliably
+        sample_transformed = self.transform(X_df.iloc[:2])
+        self.feature_names_ = list(sample_transformed.columns)
         return self
 
     def transform(self, X):

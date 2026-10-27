@@ -35,6 +35,11 @@ wheels/
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
 
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
 # IDE and OS
 .idea/
 .vscode/
