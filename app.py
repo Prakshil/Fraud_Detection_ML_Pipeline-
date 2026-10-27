@@ -173,37 +173,70 @@ with tabs[0]:
 
     # Preset selection
     preset_choice = st.radio(
-        "Load Preset Transaction Profile:",
+        "Load Preset Synthetic Test Scenarios (Handcrafted - not from dataset):",
         [
-            "🟢 Typical Legitimate Transaction (Sample Class 0)",
-            "🔴 High-Risk Fraud Pattern (Sample Class 1)",
-            "⚠️ Borderline Suspicious Pattern",
+            "🟢 Scenario 1: Everyday Legitimate Purchase ($24.50, Midday 14:00)",
+            "🔴 Scenario 2: Severe Midnight Account Takeover ($980.00, 03:00 Night)",
+            "⚠️ Scenario 3: Borderline Suspicious E-Commerce ($349.00, 21:30 Evening)",
+            "🤖 Scenario 4: Automated Card-Testing Micro-Transaction ($1.00, 04:30 Early Morning)",
             "🛠️ Custom Transaction Inputs"
         ],
-        horizontal=True
+        horizontal=False
     )
 
-    # Initialize transaction values based on preset
-    if preset_choice.startswith("🟢") and df_normal_sample is not None:
-        row = df_normal_sample.drop(columns=['Class']).iloc[0].to_dict()
-    elif preset_choice.startswith("🔴") and df_fraud_sample is not None and len(df_fraud_sample) > 0:
-        row = df_fraud_sample.drop(columns=['Class']).iloc[0].to_dict()
-    elif preset_choice.startswith("⚠️"):
-        # Synthetic borderline pattern
-        row = {f"V{i}": 0.0 for i in range(1, 29)}
-        row["Time"] = 82000.0
-        row["Amount"] = 349.50
-        row["V14"] = -2.75
-        row["V12"] = -2.10
-        row["V10"] = -1.95
-        row["V4"] = 2.10
-        row["V17"] = -1.80
+    # Initialize transaction values based on synthetic scenarios
+    row = {f"V{i}": 0.0 for i in range(1, 29)}
+    if preset_choice.startswith("🟢 Scenario 1"):
+        row.update({
+            "Time": 50400.0,
+            "Amount": 24.50,
+            "V14": 0.25,
+            "V12": -0.15,
+            "V10": 0.10,
+            "V17": 0.05,
+            "V4": -0.30,
+            "V11": -0.20
+        })
+    elif preset_choice.startswith("🔴 Scenario 2"):
+        row.update({
+            "Time": 10800.0,
+            "Amount": 980.00,
+            "V14": -7.20,
+            "V12": -4.80,
+            "V10": -3.90,
+            "V17": -4.10,
+            "V4": 3.85,
+            "V11": 3.10
+        })
+    elif preset_choice.startswith("⚠️ Scenario 3"):
+        row.update({
+            "Time": 77400.0,
+            "Amount": 349.00,
+            "V14": -2.60,
+            "V12": -1.95,
+            "V10": -1.50,
+            "V17": -1.20,
+            "V4": 1.80,
+            "V11": 1.40
+        })
+    elif preset_choice.startswith("🤖 Scenario 4"):
+        row.update({
+            "Time": 16200.0,
+            "Amount": 1.00,
+            "V14": -4.50,
+            "V12": -3.20,
+            "V10": -2.80,
+            "V17": -2.90,
+            "V4": 2.60,
+            "V11": 2.10
+        })
     else:
-        row = {f"V{i}": 0.0 for i in range(1, 29)}
-        row["Time"] = 45000.0
-        row["Amount"] = 120.00
-        row["V14"] = -0.5
-        row["V12"] = -0.2
+        row.update({
+            "Time": 45000.0,
+            "Amount": 100.00,
+            "V14": -0.50,
+            "V12": -0.20
+        })
 
     # Two column layout for transaction inputs
     with st.expander("📝 Modify Transaction Parameters (Time, Amount, V1-V28)", expanded=(preset_choice.startswith("🛠️"))):

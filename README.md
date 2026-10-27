@@ -128,12 +128,52 @@ To launch the real-time fraud scoring dashboard with SHAP explainability and alg
 ```bash
 streamlit run app.py
 ```
-**Dashboard Features:**
-* **🔍 Live Transaction Inspector:** Real-time scoring, risk probability gauge, interactive decision threshold slider, and plain-English reasons for fraud alerts.
+*Optional custom port or headless execution:*
+```bash
+streamlit run app.py --server.port 8501 --server.headless true
+```
+
+#### Streamlit UI Configuration (`.streamlit/config.toml`)
+The platform includes pre-configured visual and server settings:
+```toml
+[theme]
+primaryColor = "#1e3d59"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f8fafc"
+textColor = "#1e293b"
+font = "sans serif"
+
+[server]
+headless = true
+enableCORS = false
+enableXsrfProtection = true
+maxUploadSize = 200
+
+[browser]
+gatherUsageStats = false
+```
+
+#### Dashboard Capabilities:
+* **🔍 Live Transaction Inspector:** Real-time scoring, risk probability gauge, interactive decision threshold slider, and automated plain-English reasons for fraud alerts.
 * **💡 SHAP Explainability Engine:** Waterfall and bar charts breaking down the exact mathematical contribution of each PCA feature and interaction term.
 * **🤖 Multi-Algorithm Selection:** Switch between Random Forest, Neural Network (MLP), HistGradientBoosting, and Logistic Regression on the fly.
 * **📁 Batch Processing:** Drag-and-drop CSV upload, batch scoring, flag rate metrics, and downloadable audited CSV.
 * **💼 Financial ROI Simulator:** Live sliders for Cost of False Negative ($FN) and Cost of False Positive ($FP) modeling business cost impact.
+
+---
+
+## 🧪 Synthetic Test Cases for Manual / Live Verification
+
+To test the live dashboard without needing historical dataset samples, use these **handcrafted, domain-synthesized test scenarios** (preloaded into the dashboard dropdown or enterable manually into the parameter controls):
+
+| Scenario Profile | Time (s) / Time-of-Day | Amount ($) | V14 | V12 | V10 | V17 | V4 | V11 | Remaining V1-V28 | Expected Model Verdict | Predicted Fraud Probability | Primary Algorithmic Reason |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **🟢 Scenario 1: Everyday Legitimate Purchase** | `50,400` *(14:00 Midday)* | **$24.50** | `+0.25` | `-0.15` | `+0.10` | `+0.05` | `-0.30` | `-0.20` | `0.00` | **✅ APPROVED (NORMAL)** | **~0.05%** | Nominal midday purchase; V14 and V4 within normal cardholder variance. |
+| **🔴 Scenario 2: Severe Account Takeover** | `10,800` *(03:00 Midnight)* | **$980.00** | **`-7.20`** | **`-4.80`** | **`-3.90`** | **`-4.10`** | **`+3.85`** | **`+3.10`** | `0.00` | **🚨 FLAGGED FRAUD (DECLINE)** | **~71.95%** | Critical V14/V12 negative anomaly; high V4 authorization variance; off-peak timing. |
+| **⚠️ Scenario 3: Borderline Suspicious E-Commerce** | `77,400` *(21:30 Evening)* | **$349.00** | **`-2.60`** | **`-1.95`** | **`-1.50`** | **`-1.20`** | **`+1.80`** | **`+1.40`** | `0.00` | **⚠️ BORDERLINE (EVALUATE)** | **~25.52%** | Moderate negative drift on V14/V12; flags if decision threshold tuned below 0.25. |
+| **🤖 Scenario 4: Automated Card-Testing Bot** | `16,200` *(04:30 Early Morning)* | **$1.00** | **`-4.50`** | **`-3.20`** | **`-2.80`** | **`-2.90`** | **`+2.60`** | **`+2.10`** | `0.00` | **🚨 FLAGGED FRAUD (DECLINE)** | **~71.95%** | Severe component anomalies despite nominal $1.00 transaction volume (classic bot probing). |
+
+---
 
 ### 4. Run Automated Unit Tests
 Verify pipeline components, schema compatibility, math operations, and explainer:
