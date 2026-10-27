@@ -238,8 +238,9 @@ with tabs[0]:
             "V12": -0.20
         })
 
-    # Two column layout for transaction inputs
-    with st.expander("📝 Modify Transaction Parameters (Time, Amount, V1-V28)", expanded=(preset_choice.startswith("🛠️"))):
+    # Container for transaction inputs
+    with st.container(border=True):
+        st.markdown("#### 📝 Transaction Parameters & Feature Controls")
         col1, col2 = st.columns(2)
         with col1:
             inp_time = st.number_input("Elapsed Time (Seconds)", min_value=0.0, max_value=200000.0, value=float(row.get("Time", 0.0)))
@@ -258,9 +259,17 @@ with tabs[0]:
         v4_val = pca_cols[4].number_input("V4", value=float(row.get("V4", 0.0)), step=0.5)
         v11_val = pca_cols[5].number_input("V11", value=float(row.get("V11", 0.0)), step=0.5)
 
-        with st.expander("Remaining PCA Components (V1 to V28)"):
+        input_dict = {
+            "Time": inp_time, "Amount": inp_amount,
+            "V14": v14_val, "V12": v12_val, "V10": v10_val,
+            "V17": v17_val, "V4": v4_val, "V11": v11_val
+        }
+        for i in range(1, 29):
+            if f"V{i}" not in input_dict:
+                input_dict[f"V{i}"] = float(row.get(f"V{i}", 0.0))
+
+        with st.expander("🔬 Additional PCA Components (V1 to V28)", expanded=False):
             other_v_cols = st.columns(6)
-            input_dict = {"Time": inp_time, "Amount": inp_amount, "V14": v14_val, "V12": v12_val, "V10": v10_val, "V17": v17_val, "V4": v4_val, "V11": v11_val}
             for idx, i in enumerate([j for j in range(1, 29) if j not in [14, 12, 10, 17, 4, 11]]):
                 col_target = other_v_cols[idx % 6]
                 default_val = float(row.get(f"V{i}", 0.0))

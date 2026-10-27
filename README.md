@@ -145,7 +145,6 @@ font = "sans serif"
 
 [server]
 headless = true
-enableCORS = false
 enableXsrfProtection = true
 maxUploadSize = 200
 
