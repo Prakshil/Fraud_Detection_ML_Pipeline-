@@ -81,6 +81,9 @@ def main():
         # Evaluate with Default Threshold (0.5) for comparison
         eval_default = evaluate_model(y_test, probs, threshold=0.5, model_name=label)
         
+        # Compute Business Financial Cost: (FN * $122.21) + (FP * $10.00)
+        cost_tuned = (eval_res["false_negatives"] * 122.21) + (eval_res["false_positives"] * 10.00)
+        
         benchmark_rows.append({
             "Algorithm": label,
             "Train Time (s)": round(train_time, 2),
@@ -90,12 +93,13 @@ def main():
             "Tuned F1-Score": round(eval_res["f1_score"], 4),
             "Recall (Frauds Caught)": f"{eval_res['true_positives']}/98 ({eval_res['recall']*100:.1f}%)",
             "False Alarms (FP)": eval_res["false_positives"],
+            "Total Cost ($)": round(cost_tuned, 2),
             "Default Threshold (0.5) F1": round(eval_default["f1_score"], 4),
             "Default (0.5) False Alarms": eval_default["false_positives"]
         })
         
         print(f"       Trained in {train_time:.2f}s | PR-AUC: {eval_res['pr_auc']:.4f} | Tuned F1: {eval_res['f1_score']:.4f}")
-        print(f"       Recall: {eval_res['true_positives']}/98 | False Alarms: {eval_res['false_positives']}")
+        print(f"       Recall: {eval_res['true_positives']}/98 | False Alarms: {eval_res['false_positives']} | Cost: ${cost_tuned:,.2f}")
         
     summary_df = pd.DataFrame(benchmark_rows)
     print("\n" + "=" * 75)
