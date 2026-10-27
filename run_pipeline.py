@@ -122,7 +122,11 @@ def main():
     plot_confusion_matrix_grid(evaluation_results, save_path=cm_path)
     print(f"  - Saved Confusion Matrix Grid: {cm_path}")
     
-    # 5. Select Winning Model and Serialize to Disk
+    # 5. Serialize All Candidate Pipelines for Multi-Model Dashboard Inference
+    for m_key, pipe_obj in trained_pipelines.items():
+        save_p = os.path.join(MODELS_DIR, f"{m_key}_pipeline.joblib")
+        pipe_obj.save(save_p)
+
     best_row = summary_df.sort_values(by="PR-AUC", ascending=False).iloc[0]
     best_algo_label = best_row["Algorithm"]
     best_type = [k for k, v in model_labels.items() if v == best_algo_label][0]
@@ -131,7 +135,7 @@ def main():
     model_save_path = os.path.join(MODELS_DIR, "best_fraud_pipeline.joblib")
     best_pipeline.save(model_save_path)
     print(f"\n[6/6] Winning Model selected: {best_algo_label} (PR-AUC: {best_row['PR-AUC']:.4f})")
-    print(f"  - Production pipeline persisted to: {model_save_path}")
+    print(f"  - All candidate models and production winner persisted to: {MODELS_DIR}")
     
     # 6. Verification: Reload model and test inference on test sample
     print("\n--- Verifying Serialized Artifact with Reloaded Inference ---")

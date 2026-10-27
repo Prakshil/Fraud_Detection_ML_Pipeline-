@@ -1,5 +1,5 @@
 Algorithm,Train Time (s),PR-AUC,ROC-AUC,Tuned Threshold,Tuned F1-Score,Recall (Frauds Caught),False Alarms (FP),Total Cost ($),Default Threshold (0.5) F1,Default (0.5) False Alarms
-Logistic Regression (Cost-Sensitive),2.23,0.7266,0.9783,0.9999,0.7547,80/98 (81.6%),34,2539.78,0.107,1459
-Random Forest (Balanced Subsample),12.62,0.8344,0.9648,0.5847,0.8065,75/98 (76.5%),13,2940.83,0.8168,15
-HistGradientBoosting (Balanced),1.58,0.7364,0.9572,0.9315,0.7407,80/98 (81.6%),38,2579.78,0.5415,139
-Neural Network (MLP Classifier),17.38,0.8307,0.981,0.5919,0.8079,82/98 (83.7%),23,2185.36,0.8,28
+Logistic Regression (Cost-Sensitive),2.29,0.7266,0.9783,0.9999,0.7547,80/98 (81.6%),34,2539.78,0.107,1459
+Random Forest (Balanced Subsample),12.44,0.8344,0.9648,0.5847,0.8065,75/98 (76.5%),13,2940.83,0.8168,15
+HistGradientBoosting (Balanced),1.19,0.7364,0.9572,0.9315,0.7407,80/98 (81.6%),38,2579.78,0.5415,139
+Neural Network (MLP Classifier),10.74,0.8307,0.981,0.5919,0.8079,82/98 (83.7%),23,2185.36,0.8,28
